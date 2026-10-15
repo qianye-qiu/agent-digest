@@ -137,6 +137,14 @@ jobs:
             echo "no archive changes to commit (this is normal on re-runs)."
           fi
 
+      - name: Ensure digest label exists
+        # 仓库第一次跑、或 fork 后重置时，'digest' label 不存在 → 后面 gh issue create --label digest
+        # 会直接报 "could not add label: 'digest' not found" 让整个 job 失败。
+        # --force 让 label 已存在时不报错；始终先确保它存在（2026-10-15 在 qianye-qiu/agent-digest 踩过）。
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh label create digest --color "0E8A16" --description "AI Agent weekly digest" --force || true
+
       - name: Open / update weekly Issue
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -150,7 +158,7 @@ jobs:
           # 已存在就更新，不重复创建
           EXISTING=$(gh issue list --label digest --state all --search "in:title Agent 技术周报 $WEEK" --json number -q '.[0].number' 2>/dev/null || true)
           if [ -n "$EXISTING" ]; then
-            gh issue edit "$EXISTING" --body-file archive/latest.md
+            gh issue edit "$EXISTING" --body-file archive/latest.md --add-label digest
             echo "updated issue #$EXISTING"
           else
             gh issue create \
