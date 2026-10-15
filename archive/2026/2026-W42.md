@@ -1,8 +1,8 @@
 # AI Agent 技术周报 · 2026-W42（2026-10-07 – 2026-10-15）
 
-> 本期 **25** 条 ｜ 覆盖窗口 2026-10-07 ~ 2026-10-15（UTC）｜ 抓取源 14/18 健康
+> 本期 **25** 条 ｜ 覆盖窗口 2026-10-07 ~ 2026-10-15（UTC）｜ 抓取源 15/18 健康
 > ⚠️ 可信度为规则自动标注，重要决策前请人工复核原文
-> 生成时间：2026-10-15 12:39 UTC+8
+> 生成时间：2026-10-15 12:47 UTC+8
 
 ## 🔥 本周速览（TL;DR）
 
@@ -339,7 +339,7 @@ DSPy 3.4.1 makes GEPA's structured `InstructionProposer` the default instruction
 > 个人 SOP：周一 15min 读周报 → 周三 2h 精读+跑通 → 周四 2h 用到自己项目 → 周五 30min 写 200 字笔记。
 
 ## 🩺 数据健康
-- 正常源：arxiv_agent, arxiv_cl, arxiv_random_explore, openalex_agent, github_active_repos, github_new_repos, openai_blog, langchain_blog, deepmind_blog, hn_agent, simonwillison, infoq_cn, pypi_versions, github_releases_tier1
-- 失效源：`hf_daily_papers`（'dict' object has no attribute 'id'）`anthropic_eng`（404 Client Error: Not Found for url: https://www.anthropic.com/engineering/rss.xml）`llamaindex_blog`（404 Client Error: Not Found for url: https://www.llamaindex.ai/blog/rss.xml）`reddit_llmdevs`（429 Client Error: Too Many Requests for url: https://www.reddit.com/r/LLMDevs/new.rss）
-- 本期过滤：噪声 75 条 ｜ 重复/历史 0 条 ｜ 低可信度 0 条
+- 正常源：arxiv_agent, arxiv_cl, arxiv_random_explore, openalex_agent, github_new_repos, github_active_repos, openai_blog, langchain_blog, deepmind_blog, hn_agent, reddit_llmdevs, simonwillison, infoq_cn, pypi_versions, github_releases_tier1
+- 失效源：`hf_daily_papers`（'dict' object has no attribute 'id'）`anthropic_eng`（404 Client Error: Not Found for url: https://www.anthropic.com/engineering/rss.xml）`llamaindex_blog`（404 Client Error: Not Found for url: https://www.llamaindex.ai/blog/rss.xml）
+- 本期过滤：噪声 91 条 ｜ 重复/历史 0 条 ｜ 低可信度 0 条
 - 时间窗：7 天 + 1 天重叠（防跨源时区滞后），历史去重窗口 14 天
