@@ -1,0 +1,12 @@
+# 凭据：绝不能提交
+.env
+config/.env
+*.token
+
+# 运行时状态与归档（原始快照体积大）
+state/
+archive/**/*.raw.json
+
+__pycache__/
+*.pyc
+.venv/

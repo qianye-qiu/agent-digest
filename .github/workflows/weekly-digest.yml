@@ -1,0 +1,186 @@
+# GitHub Actions 周报工作流 —— 真正设备无关的部署
+#
+# 三种触发方式：
+#   1. schedule：每周一 UTC 02:17（北京时间 10:17）
+#   2. workflow_dispatch：在 Actions 页面手动「Run workflow」/补跑历史周
+#   3. repository_dispatch：未来可由外部事件触发（默认未启用）
+#
+# 关键设计：
+#   - **不需要用户 PAT**：用 Actions 自动注入的 GITHUB_TOKEN 即可（带 contents/issues 权限），
+#     既能 commit 回仓库，也能给我们的脚本做 API 调用
+#   - **不依赖任何本地路径、venv、客户端**：在 GitHub 的 ubuntu-latest runner 上跑，
+#     关机、换电脑、换城市都不影响
+#   - **自动 commit 是周报本身的「持久化交付」**，也是防止 scheduled workflow
+#     因 60 天无活动被静默停用的保活机制
+#
+# 可选 Secrets（不配也能跑，只是少一项投递）：
+#   SMTP_HOST / SMTP_PORT(587) / SMTP_USER / SMTP_PASS / MAIL_TO —— 邮件投递
+#   IM_WEBHOOK                                                           —— 钉钉/飞书/Slack
+#   LLM_API_KEY / LLM_BASE_URL / LLM_MODEL                              —— 启用 LLM 摘要
+name: weekly-agent-digest
+
+on:
+  schedule:
+    # 每周一 UTC 02:17 = 北京时间 10:17（避开整点排队；已实测 GH 调度 ±5 分钟属正常）
+    - cron: '17 2 * * 1'
+  workflow_dispatch:
+    inputs:
+      window:
+        description: '时间窗（天），默认 8（7 天 + 1 天重叠）'
+        required: false
+        default: '8'
+      week:
+        description: '补跑指定 ISO 周，如 2026-W40（留空则跑当前周）'
+        required: false
+        default: ''
+
+permissions:
+  contents: write    # 允许 git push（commit 周报到 archive/）
+  issues: write      # 允许创建 Issue
+
+concurrency:
+  group: agent-digest
+  cancel-in-progress: false   # 周报宁慢勿丢
+
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Check sources health
+        id: health
+        continue-on-error: true
+        run: python src/digest.py --check-sources
+
+      - name: Run digest
+        id: run
+        env:
+          # 用 Actions 自动注入的 GITHUB_TOKEN，无需用户自己建 PAT：
+          #  1) 给脚本做 GitHub API 调用（5000/h 认证额度）
+          #  2) 给下方 commit/push 步骤做 git 认证
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+          # 可选：LLM 摘要（不填则自动降级为抽取式）
+          LLM_API_KEY:  ${{ secrets.LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+          LLM_MODEL:    ${{ secrets.LLM_MODEL }}
+
+          # 可选：邮件投递（QQ 邮箱 / Gmail / 163 / 自建 SMTP 都行）
+          SMTP_HOST:    ${{ secrets.SMTP_HOST }}
+          SMTP_PORT:    ${{ secrets.SMTP_PORT }}
+          SMTP_USER:    ${{ secrets.SMTP_USER }}
+          SMTP_PASS:    ${{ secrets.SMTP_PASS }}
+          MAIL_TO:      ${{ secrets.MAIL_TO }}
+
+          # 可选：IM 机器人（钉钉/飞书/Slack Incoming Webhook）
+          IM_WEBHOOK:   ${{ secrets.IM_WEBHOOK }}
+
+          # 手动触发时可改窗口 / 指定 ISO 周
+          DIGEST_WINDOW: ${{ inputs.window }}
+          DIGEST_WEEK:   ${{ inputs.week }}
+        run: |
+          set -e
+          WIN=${DIGEST_WINDOW:-8}
+          CHANS="github_issue,email"
+          EXTRA=""
+          if [ -n "$DIGEST_WEEK" ]; then EXTRA="--backfill $DIGEST_WEEK"; fi
+          python src/digest.py --window ${WIN}d --push "$CHANS" $EXTRA
+        # 上面这一步会在 archive/YYYY/YYYY-Wnn.md 写文件，并在 archive/latest.md 留副本
+
+      - name: Commit archive back to repo
+        run: |
+          set -e
+          git config user.name  "agent-digest-bot"
+          git config user.email "agent-digest-bot@users.noreply.github.com"
+          # .raw.json 体量大，已在 .gitignore 排除；其余正文 + 元数据全量入库
+          git add archive state 2>/dev/null || true
+          if ! git diff --cached --quiet; then
+            WEEK=$(date -u +%G-W%V)
+            git commit -m "chore(digest): AI Agent 周报 $WEEK"
+            git push
+            echo "committed and pushed."
+          else
+            echo "no archive changes to commit (this is normal on re-runs)."
+          fi
+
+      - name: Open / update weekly Issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          if [ ! -s archive/latest.md ]; then
+            echo "::error::archive/latest.md not found, skip issue"
+            exit 1
+          fi
+          WEEK=$(date -u +%G-W%V)
+          # 已存在就更新，不重复创建
+          EXISTING=$(gh issue list --label digest --state all --search "in:title Agent 技术周报 $WEEK" --json number -q '.[0].number' 2>/dev/null || true)
+          if [ -n "$EXISTING" ]; then
+            gh issue edit "$EXISTING" --body-file archive/latest.md
+            echo "updated issue #$EXISTING"
+          else
+            gh issue create \
+              --title "Agent 技术周报 $WEEK" \
+              --body-file archive/latest.md \
+              --label digest
+            echo "created new issue"
+          fi
+
+      - name: Send email (optional)
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          MAIL_TO:   ${{ secrets.MAIL_TO }}
+        run: |
+          python - <<'PY'
+          import os, smtplib, sys
+          from email.mime.text import MIMEText
+          from email.header import Header
+          if not os.environ.get('SMTP_HOST'):
+              print('SMTP_HOST not set, skip email')
+              sys.exit(0)
+          md = open('archive/latest.md', encoding='utf-8').read()
+          msg = MIMEText(md, 'plain', 'utf-8')
+          week = os.popen('date -u +%G-W%V').read().strip()
+          msg['Subject'] = Header(f'[Agent周报] {week}', 'utf-8')
+          msg['From'] = os.environ['SMTP_USER']
+          msg['To']   = os.environ['MAIL_TO']
+          with smtplib.SMTP(os.environ['SMTP_HOST'], int(os.environ.get('SMTP_PORT', 587)), timeout=30) as s:
+              s.starttls()
+              s.login(os.environ['SMTP_USER'], os.environ['SMTP_PASS'])
+              s.sendmail(os.environ['SMTP_USER'], os.environ['MAIL_TO'].split(','), msg.as_string())
+          print('email sent')
+          PY
+
+      - name: Notify IM on failure
+        if: failure()
+        env:
+          IM_WEBHOOK: ${{ secrets.IM_WEBHOOK }}
+        run: |
+          if [ -z "$IM_WEBHOOK" ]; then
+            echo "no IM_WEBHOOK configured, skip notification."
+            exit 0
+          fi
+          curl -s -X POST -H 'Content-Type: application/json' \
+            -d '{"msgtype":"text","text":{"content":"⚠️ AI Agent 技术周报定时任务失败，请查看 GitHub Actions 日志（Actions → weekly-agent-digest）"}}' \
+            "$IM_WEBHOOK" || true

@@ -1,0 +1,133 @@
+# 关键词分层与权重。命中即加/减分，公式见方案文档 4.2
+weights:
+  core_in_title: 6
+  core_in_body: 3
+  frame_any: 3
+  topic_any: 1
+  neg_any: -5
+  has_code_bonus: 2
+  tier1_bonus: 2
+
+thresholds:
+  min_score: 6
+  require_core_hit: true        # 必须命中至少 1 个 CORE 词
+  tier_a_score: 10              # >= 10 归入 A 层
+  quota: { S: 99, A: 10, B: 6, total: 25, min_total: 8 }
+
+core:
+  - agent
+  - agents
+  - agentic
+  - multi-agent
+  - llm agent
+  - 智能体
+  - tool use
+  - tool calling
+  - function calling
+  - mcp
+  - model context protocol
+  - computer use
+  - autonomous
+  - long-horizon
+  - agent harness
+  - a2a
+
+frame:
+  - langgraph
+  - langchain
+  - llamaindex
+  - autogen
+  - crewai
+  - semantic kernel
+  - pydantic-ai
+  - agents sdk
+  - google adk
+  - dspy
+  - smolagents
+  - mastra
+  - agno
+  - browser-use
+  - openhands
+  - claude code
+  - mcp server
+  - langfuse
+  - langsmith
+  - phoenix
+  - openai agents
+
+topic:
+  - planning
+  - memory
+  - reflection
+  - orchestration
+  - routing
+  - handoff
+  - evaluation
+  - benchmark
+  - guardrail
+  - sandbox
+  - observability
+  - tracing
+  - context engineering
+  - context window
+  - rag
+  - finetune
+  - rl
+  - verifier
+  - self-evolve
+  - prompt injection
+  - jailbreak
+  - latency
+  - cost
+  - kv cache
+  - idempotency
+  - retry
+  - human-in-the-loop
+  - rate limit
+  - streaming
+  - 上下文工程
+  - 记忆
+  - 多智能体
+
+neg:
+  - 招聘
+  - hiring
+  - 股价
+  - 融资
+  - funding
+  - 估值
+  - 发布会
+  - ai 取代
+  - 课程
+  - 培训班
+  - 抽奖
+  - 营销
+  - 广告
+  - crypto
+  - airdrop
+
+# 栏目归类：命中关键词最多者胜
+categories:
+  协议与标准: [mcp, model context protocol, a2a, function calling, tool calling, schema, 标准, 协议]
+  评测·可观测·安全: [evaluation, benchmark, observability, tracing, guardrail, prompt injection, jailbreak, 评测, 可观测, 安全]
+  论文与算法: [arxiv, paper, 论文, rl, finetune, verifier, self-evolve]
+  框架与工具更新: [release, changelog, version, 发布, langgraph, langchain, llamaindex, autogen, crewai, pydantic-ai, adk, smolagents]
+  工程实践与案例: [case study, production, migration, 实践, 落地, 案例, latency, cost]
+
+# 学习雷达：固定兜底条目 + 按本期 TOPIC 词频动态生成
+learning_radar_fixed:
+  - priority: P0
+    topic: "MCP / 工具标准化"
+    why: "工具接入正在从各写各的走向统一协议，越早掌握越省事"
+    how: "用官方 SDK 把一个内部 API 封装成 MCP Server，接入两个不同客户端"
+    output: "团队可复用的 MCP Server 包"
+  - priority: P1
+    topic: "Agent 评测与回归"
+    why: "没有评测集的 Agent 无法安全上线和迭代"
+    how: "搭 20 条离线用例集 + 全链路 trace，接入 CI"
+    output: "评测流水线 + 通过率看板"
+  - priority: P2
+    topic: "上下文工程与记忆策略"
+    why: "长程任务的主要失败点不是模型能力而是上下文管理"
+    how: "对比 3 种记忆压缩策略在自有任务上的成功率与 token 成本"
+    output: "压测对比报告"

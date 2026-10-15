@@ -1,0 +1,48 @@
+# AI Agent 技术周报 · {{ meta.week }}（{{ meta.since }} – {{ meta.until }}）
+
+> 本期 **{{ meta.total }}** 条 ｜ 覆盖窗口 {{ meta.since }} ~ {{ meta.until }}（UTC）｜ 抓取源 {{ meta.sources_ok }}/{{ meta.sources_total }} 健康
+> ⚠️ {{ meta.disclaimer }}
+> 生成时间：{{ meta.generated_at }}
+
+## 🔥 本周速览（TL;DR）
+{% for i in items[:5] %}
+{{ loop.index }}. **{{ i.title }}** — {{ i.summary }}（{{ i.cred_badge }} {{ i.cred_label }}）
+{% endfor %}
+
+{% set cats = ["框架与工具更新", "论文与算法", "协议与标准", "工程实践与案例", "评测·可观测·安全", "其他值得一看"] %}
+{% for c in cats %}
+{% set group = items | selectattr("category", "equalto", c) | list %}
+{% if group %}
+## {% if c == "框架与工具更新" %}🧩{% elif c == "论文与算法" %}📄{% elif c == "协议与标准" %}🔌{% elif c == "工程实践与案例" %}🛠{% elif c == "评测·可观测·安全" %}🔍{% else %}📌{% endif %} {{ c }}
+{% for i in group %}
+### {{ loop.index }}. {{ i.title }}
+- **来源**：{{ i.url }} ｜ {{ i.source_id }} ｜ {{ (i.ts.strftime('%Y-%m-%d') if i.ts else '时间推定') }}
+- **可信度**：{{ i.cred_badge }} **{{ i.cred_label }}** — {{ i.cred_reason }}
+- **要点**：{{ i.summary }}
+- **为什么重要**：{{ i.why }}
+- **开发建议**：{{ i.action }}
+{% if i.extra.get('discuss') %}- **讨论**：{{ i.extra['discuss'] }}
+{% endif %}
+{% endfor %}
+
+{% endif %}
+{% endfor %}
+## 📚 本周技术雷达（建议重点学习）
+
+| 优先级 | 技术点 | 为什么 | 上手方式 | 产出物 |
+|---|---|---|---|---|
+{% for r in radar %}| {{ r.priority }} | {{ r.topic }} | {{ r.why }} | {{ r.how }} | {{ r.output }} |
+{% endfor %}
+
+## 🎯 本周三个动手任务
+1. **[2h] 协议向**：用 MCP SDK 把一个内部 API 封装成 MCP Server，接入现有 Agent
+2. **[3h] 论文向**：精读本周 `论文与算法` 栏目第一条，跑通其官方 repo 的最小示例
+3. **[1h] 社区向**：给本期任一开源项目提一个 issue 或文档 PR（建立反馈回路）
+
+> 个人 SOP：周一 15min 读周报 → 周三 2h 精读+跑通 → 周四 2h 用到自己项目 → 周五 30min 写 200 字笔记。
+
+## 🩺 数据健康
+- 正常源：{{ meta.health.ok | join(', ') }}
+- 失效源：{% if meta.health.failed %}{% for f in meta.health.failed %}`{{ f.id }}`（{{ f.error }}）{% endfor %}{% else %}无{% endif %}
+- 本期过滤：噪声 {{ meta.health.filtered['noise'] }} 条 ｜ 重复/历史 {{ meta.health.filtered['dup'] }} 条 ｜ 低可信度 {{ meta.health.filtered['lowcred'] }} 条
+- 时间窗：7 天 + 1 天重叠（防跨源时区滞后），历史去重窗口 14 天

@@ -1,0 +1,219 @@
+# 数据源清单。新增来源只需在此追加，无需改代码。
+# tier: 1=一手权威 2=社区/媒体 3=聚合(低权重)
+# source_class: official | venue | preprint | community | media | selfmedia  (影响可信度基准分)
+# optional: true 的源失败时只告警，不阻断
+
+defaults:
+  # 2026-10-15 实测：10s 会让 deepmind / huggingface 等慢源频繁超时，放宽到 15s
+  timeout_sec: 15
+  retry: 3
+  concurrency: 4
+  # 注意：HTTP 头只允许 latin-1 字符，这里不要填中文，否则全部源都会失败（代码里会做兜底清洗）
+  user_agent: "AgentDigestBot/1.0 (+{{CONTACT_EMAIL}})"
+
+sources:
+  # ---------- A 组：论文 ----------
+  - id: arxiv_agent
+    type: arxiv
+    tier: 1
+    source_class: preprint
+    # 必须走 https：实测 http 会被返回 403（2026-10-15 修复）
+    url: "https://export.arxiv.org/api/query"
+    params:
+      search_query: 'cat:cs.AI AND (abs:"agent" OR abs:"multi-agent" OR abs:"tool use" OR abs:"agentic")'
+      sortBy: submittedDate
+      sortOrder: descending
+      max_results: 100
+
+  - id: arxiv_cl
+    type: arxiv
+    tier: 1
+    source_class: preprint
+    # 必须走 https：实测 http 会被返回 403（2026-10-15 修复）
+    url: "https://export.arxiv.org/api/query"
+    params:
+      search_query: 'cat:cs.CL AND (abs:"agent" OR abs:"tool calling" OR abs:"function calling")'
+      sortBy: submittedDate
+      sortOrder: descending
+      max_results: 60
+
+  # 论文源兜底：本机 arXiv 出口被限流（429）、huggingface 被拦截，
+  # OpenAlex 实测可达且同样收录 arXiv 预印本（2026-10-15 新增）
+  - id: openalex_agent
+    type: openalex
+    tier: 1
+    source_class: venue
+    url: "https://api.openalex.org/works"
+    params:
+      # 实测「LLM agent」相关性最高（621 条/8天）；写成 OR 列表反而失效，
+      # OpenAlex 的 search 只接受单个检索串，多主题请另建一条 source
+      filter: 'title_and_abstract.search:LLM agent,from_publication_date:{SINCE},to_publication_date:{UNTIL}'
+      sort: "publication_date:desc"
+      per-page: 50
+      # OpenAlex polite pool：填真实邮箱可获得更稳定的配额
+      mailto: "agentdigest@example.com"
+    optional: true
+
+  - id: hf_daily_papers
+    type: json
+    tier: 1
+    source_class: preprint
+    url: "https://huggingface.co/api/daily_papers"
+    jq_like:
+      list_path: "$"
+      title: "paper.title"
+      url: "https://huggingface.co/papers/{paper.id}"
+      body: "paper.summary"
+      ts: "publishedAt"
+      extra: { upvotes: "paper.upvotes" }
+
+  # ---------- B 组：开源与框架 ----------
+  # 注意：新出现的仓库 ≠ 权威信息源。source_class 设为 community，
+  # 否则随机新仓库会被评成 A+ 官方一手（2026-W42 实测踩过这个坑）
+  - id: github_new_repos
+    type: github_search_repo
+    tier: 2
+    source_class: community
+    query: "agent OR agents OR agentic OR mcp created:>{SINCE} stars:>50"
+    sort: stars
+    min_stars: 50
+
+  - id: github_active_repos
+    type: github_search_repo
+    tier: 2
+    source_class: community
+    query: "agent pushed:>{SINCE} stars:>500"
+    sort: updated
+    min_stars: 500
+
+  - id: github_releases_tier1
+    type: github_release
+    tier: 1
+    source_class: official
+    repos:
+      - langchain-ai/langgraph
+      - langchain-ai/langchain
+      - run-llama/llama_index
+      - microsoft/autogen
+      - crewAIInc/crewAI
+      - microsoft/semantic-kernel
+      - pydantic/pydantic-ai
+      - openai/openai-agents-python
+      - google/adk-python
+      - modelcontextprotocol/servers
+      - modelcontextprotocol/python-sdk
+      - browser-use/browser-use
+      - agno-agi/agno
+      - huggingface/smolagents
+      - stanfordnlp/dspy
+      - All-Hands-AI/OpenHands
+    per_repo: 5
+
+  - id: pypi_versions
+    type: pypi
+    tier: 1
+    source_class: official
+    packages:
+      [langgraph, langchain, llama-index, autogen-agentchat, crewai,
+       semantic-kernel, pydantic-ai, openai-agents, mcp, browser-use, dspy]
+
+  # ---------- C 组：官方博客与标准 ----------
+  - id: openai_blog
+    type: rss
+    tier: 1
+    source_class: official
+    url: "https://openai.com/blog/rss.xml"
+    optional: true          # 需 --check-sources 校验
+
+  # 2026-10-15 实测：Anthropic 官方已不提供 RSS（rss.xml / news/rss.xml / feed.xml 全 404）
+  # 保留条目以便官方恢复后自动生效；当前失败只告警，Anthropic 动态靠搜索与 GitHub Release 兜底
+  - id: anthropic_eng
+    type: rss
+    tier: 1
+    source_class: official
+    url: "https://www.anthropic.com/engineering/rss.xml"
+    optional: true
+
+  # 2026-10-15 实测：该地址返回 HTML 而非 feed，解析出 0 条（静默失败）。
+  # LangChain 动态已由 github_releases_tier1 覆盖，故本条仅作备用
+  - id: langchain_blog
+    type: rss
+    tier: 1
+    source_class: official
+    url: "https://blog.langchain.dev/rss/"
+    optional: true
+
+  # 2026-10-15 实测：404；LlamaIndex 动态同样由 github_releases_tier1 覆盖
+  - id: llamaindex_blog
+    type: rss
+    tier: 1
+    source_class: official
+    url: "https://www.llamaindex.ai/blog/rss.xml"
+    optional: true
+
+  - id: deepmind_blog
+    type: rss
+    tier: 1
+    source_class: official
+    url: "https://deepmind.google/blog/rss.xml"
+    optional: true
+
+  # ---------- D 组：社区与实践 ----------
+  - id: hn_agent
+    type: hn
+    tier: 2
+    source_class: community
+    url: "https://hn.algolia.com/api/v1/search_by_date"
+    params: { query: "agent OR LLM agent OR MCP", tags: "story", hitsPerPage: 100 }
+    min_points: 50
+
+  - id: reddit_llmdevs
+    type: rss
+    tier: 2
+    source_class: community
+    url: "https://www.reddit.com/r/LLMDevs/new.rss"
+    optional: true
+
+  - id: infoq_cn
+    type: rss
+    tier: 2
+    source_class: media
+    url: "https://www.infoq.cn/feed"
+    optional: true
+
+  # 2026-10-15 实测可达（HN / Reddit / HF 在本机被网络策略拦截，本条用于补社区视角）
+  - id: simonwillison
+    type: rss
+    tier: 2
+    source_class: community
+    url: "https://simonwillison.net/atom/everything/"
+    optional: true
+
+  # ---------- 探索类（保留 20% 配额，破信息茧房）----------
+  - id: arxiv_random_explore
+    type: arxiv
+    tier: 2
+    source_class: preprint
+    explore: true
+    # 必须走 https：实测 http 会被返回 403（2026-10-15 修复）
+    url: "https://export.arxiv.org/api/query"
+    params:
+      search_query: 'cat:cs.MA OR cat:cs.SE AND abs:"agent"'
+      sortBy: submittedDate
+      sortOrder: descending
+      max_results: 40
+
+# ---------- 推送 ----------
+push:
+  channels: ["{{推送渠道}}"]        # 例: ["email", "github_issue", "dingtalk"]
+  email:
+    host: "{{SMTP_HOST}}"
+    port: 587
+    user: "{{SMTP_USER}}"
+    password: "{{SMTP_PASS}}"
+    to: "{{MAIL_TO}}"
+    subject_prefix: "[Agent周报]"
+  im_webhook: "{{IM_WEBHOOK}}"      # 钉钉/飞书/Slack Incoming Webhook
+  github_issue:
+    enabled: true
+    labels: ["digest"]
