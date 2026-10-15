@@ -730,5 +730,19 @@ if __name__ == "__main__":
     if a.check_sources:
         check_sources(); sys.exit(0)
     chans = [c.strip() for c in a.push.split(",") if c.strip()] or None
-    run(window_days=int(a.window.rstrip("d")), do_push=not a.dry_run,
-        channels=chans, week=a.backfill or None)
+    # 兜底：把 run() 整个裹一层。任何未捕获异常走 stderr，errors='replace' 让非 ASCII
+    # 字符也不会让 traceback 自身崩（2026-10-15 GA 上踩过「错误信息看不到完整 traceback」）。
+    # exit code 透传：成功 0、失败 1、用户中断 130。
+    try:
+        run(window_days=int(a.window.rstrip("d")), do_push=not a.dry_run,
+            channels=chans, week=a.backfill or None)
+    except KeyboardInterrupt:
+        sys.exit(130)
+    except SystemExit:
+        raise
+    except Exception:
+        import traceback
+        tb = traceback.format_exc()
+        sys.stderr.write(tb.encode("utf-8", errors="replace").decode("utf-8", errors="replace"))
+        sys.stderr.flush()
+        sys.exit(1)

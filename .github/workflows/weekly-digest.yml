@@ -73,6 +73,14 @@ jobs:
       - name: Run digest
         id: run
         env:
+          # 双保险：先把 locale 锁成 UTF-8，Python 启动时也会读这个 env 决定 stdout 编码。
+          # 即便 src/digest.py 顶部的 reconfigure 因为某些 runner 怪配置失败，
+          # 也不会让 print 报 UnicodeEncodeError（2026-10-15 在 GA 上踩过这个坑）。
+          LANG: C.UTF-8
+          LC_ALL: C.UTF-8
+          PYTHONIOENCODING: utf-8
+          PYTHONUNBUFFERED: "1"
+
           # 用 Actions 自动注入的 GITHUB_TOKEN，无需用户自己建 PAT：
           #  1) 给脚本做 GitHub API 调用（5000/h 认证额度）
           #  2) 给下方 commit/push 步骤做 git 认证
@@ -102,7 +110,15 @@ jobs:
           CHANS="github_issue,email"
           EXTRA=""
           if [ -n "$DIGEST_WEEK" ]; then EXTRA="--backfill $DIGEST_WEEK"; fi
-          python src/digest.py --window ${WIN}d --push "$CHANS" $EXTRA
+          # python -u 取消缓冲，日志能实时看到；tee 留一份给最后打印用；
+          # PIPESTATUS 拿 python 的真实退出码（不取 tee 的）。
+          python -u src/digest.py --window ${WIN}d --push "$CHANS" $EXTRA 2>&1 | tee /tmp/digest.log
+          EC=${PIPESTATUS[0]}
+          if [ "$EC" -ne 0 ]; then
+            echo "::error::digest.py exit code: $EC — last 80 lines of log:"
+            tail -80 /tmp/digest.log || true
+            exit $EC
+          fi
         # 上面这一步会在 archive/YYYY/YYYY-Wnn.md 写文件，并在 archive/latest.md 留副本
 
       - name: Commit archive back to repo
