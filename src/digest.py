@@ -25,6 +25,17 @@ import requests
 import yaml
 from jinja2 import Environment, FileSystemLoader
 
+# 把 stdout/stderr 强制重配为 utf-8。
+# GitHub Actions 的 ubuntu-latest runner 默认 LANG=C，Python 检测到 stdout 非 TTY 时
+# 会用 locale.getpreferredencoding() 拿到 ASCII；模板里的 ⚠️/🟢/📄 等 emoji 一 print 就崩，
+# 抛 UnicodeEncodeError 让整个脚本 exit 1（2026-10-15 在 Actions 上踩过这个坑）。
+# 本机 Windows 默认 GBK 同样会炸，统一兜底最稳。Python 3.7+ 才有的 reconfigure，旧版静默忽略。
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+except Exception:
+    pass
+
 ROOT = Path(__file__).resolve().parent.parent
 CFG_DIR, TPL_DIR, ARCH_DIR, STATE_DIR = (
     ROOT / "config", ROOT / "templates", ROOT / "archive", ROOT / "state")
