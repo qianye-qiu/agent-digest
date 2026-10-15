@@ -1,8 +1,8 @@
 # AI Agent 技术周报 · 2026-W42（2026-10-07 – 2026-10-15）
 
-> 本期 **25** 条 ｜ 覆盖窗口 2026-10-07 ~ 2026-10-15（UTC）｜ 抓取源 11/18 健康
+> 本期 **25** 条 ｜ 覆盖窗口 2026-10-07 ~ 2026-10-15（UTC）｜ 抓取源 12/18 健康
 > ⚠️ 可信度为规则自动标注，重要决策前请人工复核原文
-> 生成时间：2026-10-15 11:13 UTC+8
+> 生成时间：2026-10-15 11:47 UTC+8
 
 ## 🔥 本周速览（TL;DR）
 
@@ -13,18 +13,18 @@
 
 * exp（自动摘要，未润色）（🟢 ★★★★★ A+ 官方一手）
 
-2. **agno-agi/agno v3.1.2 — v3.1.2** — # Changelog
-
-## New Features:
-
+2. **agno-agi/agno v3.1.2 — v3.1.2** — # Changelog
+
+## New Features:
+
 - **Conversation Compaction**: `Agent(compaction=True)` keeps long sessions inside th（自动摘要，未润色）（🟢 ★★★★★ A+ 官方一手）
 
 3. **openai-agents 0.24.0 发布** — openai-agents 发布新版本 0.24.0（自动摘要，未润色）（🟢 ★★★★★ A+ 官方一手）
 
-4. **modelcontextprotocol/servers v1.0.0 — v1.0.0** — ## Packages
-
-| Package | Version | Registry | In this release |
-| --- | --- | --- | --- |
+4. **modelcontextprotocol/servers v1.0.0 — v1.0.0** — ## Packages
+
+| Package | Version | Registry | In this release |
+| --- | --- | --- | --- |
 | `@modelcontextprotocol/s（自动摘要，未润色）（🟢 ★★★★★ A+ 官方一手）
 
 5. **browser-use/browser-use 0.13.11 — 0.13.11** — This release includes Browser Use toolsets for Claude, available at `browser_use.integrations.toolsets_for_claude`.（自动摘要，未润色）（🟢 ★★★★★ A+ 官方一手）
@@ -47,10 +47,10 @@
 ### 2. modelcontextprotocol/servers v1.0.0 — v1.0.0
 - **来源**：https://github.com/modelcontextprotocol/servers/releases/tag/v1.0.0 ｜ github_releases_tier1 ｜ 2026-10-11
 - **可信度**：🟢 **★★★★★ A+ 官方一手** — 来源=official(5) 证据链+2 互证+0
-- **要点**：## Packages
-
-| Package | Version | Registry | In this release |
-| --- | --- | --- | --- |
+- **要点**：## Packages
+
+| Package | Version | Registry | In this release |
+| --- | --- | --- | --- |
 | `@modelcontextprotocol/s（自动摘要，未润色）
 - **为什么重要**：—
 - **开发建议**：—
@@ -59,10 +59,10 @@
 ### 3. agno-agi/agno v3.1.3 — v3.1.3
 - **来源**：https://github.com/agno-agi/agno/releases/tag/v3.1.3 ｜ github_releases_tier1 ｜ 2026-10-12
 - **可信度**：🟢 **★★★★★ A+ 官方一手** — 来源=official(5) 证据链+2 互证+0
-- **要点**：# Changelog
-
-## New Features:
-
+- **要点**：# Changelog
+
+## New Features:
+
 - **Durable External Agent Sessions**: `ClaudeAgent` sessions now resume on any repli（自动摘要，未润色）
 - **为什么重要**：—
 - **开发建议**：—
@@ -116,11 +116,11 @@
 ### 8. google/adk-python v2.12.0 — v2.12.0
 - **来源**：https://github.com/google/adk-python/releases/tag/v2.12.0 ｜ github_releases_tier1 ｜ 2026-10-13
 - **可信度**：🟢 **★★★★★ A+ 官方一手** — 来源=official(5) 证据链+2 互证+0
-- **要点**：## [2.12.0](https://github.com/google/adk-python/compare/v2.11.0...v2.12.0) (2026-10-13)
-
-
-### Highlights
-
+- **要点**：## [2.12.0](https://github.com/google/adk-python/compare/v2.11.0...v2.12.0) (2026-10-13)
+
+
+### Highlights
+
 This rel（自动摘要，未润色）
 - **为什么重要**：—
 - **开发建议**：—
@@ -148,8 +148,8 @@ This rel（自动摘要，未润色）
 ### 1. stanfordnlp/dspy 3.4.1 — 3.4.1
 - **来源**：https://github.com/stanfordnlp/dspy/releases/tag/3.4.1 ｜ github_releases_tier1 ｜ 2026-10-12
 - **可信度**：🟢 **★★★★★ A+ 官方一手** — 来源=official(5) 证据链+2 互证+0
-- **要点**：# DSPy 3.4.1
-
+- **要点**：# DSPy 3.4.1
+
 DSPy 3.4.1 makes GEPA's structured `InstructionProposer` the default instruction proposer and lets `dspy（自动摘要，未润色）
 - **为什么重要**：—
 - **开发建议**：—
@@ -186,10 +186,10 @@ DSPy 3.4.1 makes GEPA's structured `InstructionProposer` the default instruction
 ### 2. agno-agi/agno v3.1.2 — v3.1.2
 - **来源**：https://github.com/agno-agi/agno/releases/tag/v3.1.2 ｜ github_releases_tier1 ｜ 2026-10-08
 - **可信度**：🟢 **★★★★★ A+ 官方一手** — 来源=official(5) 证据链+2 互证+0
-- **要点**：# Changelog
-
-## New Features:
-
+- **要点**：# Changelog
+
+## New Features:
+
 - **Conversation Compaction**: `Agent(compaction=True)` keeps long sessions inside th（自动摘要，未润色）
 - **为什么重要**：—
 - **开发建议**：—
@@ -339,7 +339,7 @@ DSPy 3.4.1 makes GEPA's structured `InstructionProposer` the default instruction
 > 个人 SOP：周一 15min 读周报 → 周三 2h 精读+跑通 → 周四 2h 用到自己项目 → 周五 30min 写 200 字笔记。
 
 ## 🩺 数据健康
-- 正常源：openalex_agent, github_new_repos, github_active_repos, openai_blog, langchain_blog, deepmind_blog, hn_agent, infoq_cn, pypi_versions, github_releases_tier1, simonwillison
-- 失效源：`arxiv_agent`（HTTPSConnectionPool(host='export.arxiv.org', port=443): Read timed out. (read timeout=15)）`arxiv_cl`（429 Client Error: Unknown Error for url: https://export.arxiv.org/api/query?search_query=cat%3Acs.CL+AND+%28abs%3A%22age）`arxiv_random_explore`（HTTPSConnectionPool(host='export.arxiv.org', port=443): Read timed out. (read timeout=15)）`anthropic_eng`（404 Client Error: Not Found for url: https://www.anthropic.com/engineering/rss.xml）`hf_daily_papers`（HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /api/daily_papers (Caused by ProxyE）`llamaindex_blog`（404 Client Error: Not Found for url: https://www.llamaindex.ai/blog/rss.xml）`reddit_llmdevs`（HTTPSConnectionPool(host='www.reddit.com', port=443): Max retries exceeded with url: /r/LLMDevs/new.rss (Caused by Proxy）
-- 本期过滤：噪声 71 条 ｜ 重复/历史 0 条 ｜ 低可信度 0 条
+- 正常源：openalex_agent, github_new_repos, github_active_repos, openai_blog, langchain_blog, deepmind_blog, hn_agent, reddit_llmdevs, simonwillison, infoq_cn, pypi_versions, github_releases_tier1
+- 失效源：`arxiv_agent`（HTTPSConnectionPool(host='export.arxiv.org', port=443): Read timed out. (read timeout=15)）`arxiv_cl`（429 Client Error: Unknown Error for url: https://export.arxiv.org/api/query?search_query=cat%3Acs.CL+AND+%28abs%3A%22age）`arxiv_random_explore`（429 Client Error: Unknown Error for url: https://export.arxiv.org/api/query?search_query=cat%3Acs.MA+OR+cat%3Acs.SE+AND+）`hf_daily_papers`（'dict' object has no attribute 'id'）`anthropic_eng`（404 Client Error: Not Found for url: https://www.anthropic.com/engineering/rss.xml）`llamaindex_blog`（404 Client Error: Not Found for url: https://www.llamaindex.ai/blog/rss.xml）
+- 本期过滤：噪声 87 条 ｜ 重复/历史 0 条 ｜ 低可信度 0 条
 - 时间窗：7 天 + 1 天重叠（防跨源时区滞后），历史去重窗口 14 天
